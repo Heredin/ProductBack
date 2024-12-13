@@ -25,3 +25,4 @@ Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::resource('admin/products', ProductController::class);
+Route::get('/pdf', [ProductController::class, 'generatePDF'])->name('products.generatePDF');

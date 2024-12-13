@@ -1,30 +1,26 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Http\Requests\ProductRequest;
 use Exception;
+use App\Models\Product;
 
 class ProductController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
     public function index()
     {
         $products = Product::get();
-        return view("admin.products.index", compact('products'));
+        return response()->json([
+            'status' => true,
+            'data' => ['products' => $products]
+        ]);
     }
 
-    public function create()
-    {
-        return view("admin.products.create");
-    }
     public function store(ProductRequest $request)
     {
+
         try {
             $product = new Product;
             $product->name = $request->get('name');
@@ -36,15 +32,16 @@ class ProductController extends Controller
             exit;
         }
         $product->save();
-        return redirect()->route('products.index');
+        return response()->json([
+            'status' => true,
+            'message' => "Product Created successfully!",
+            'product' => $product
+        ], 200);
     }
-    public function edit($id)
-    {
-        $product = Product::whereId($id)->first();
-        return view("admin.products.edit", \compact('product'));
-    }
+
     public function update(ProductRequest $request, Product $product)
     {
+
         try {
             $product->name = $request->get('name');
             $product->price = $request->get('price');
@@ -55,21 +52,25 @@ class ProductController extends Controller
             exit;
         }
         $product->update();
-        return redirect()->route('products.index');
+        return response()->json([
+            'status' => true,
+            'message' => "Product Updated successfully!",
+            'product' => $product
+        ], 200);
     }
 
     public function destroy(Product $product)
     {
-        $product->delete();
-        return redirect()->route('products.index');
-    }
-
-    public function generatePDF()
-    {
-        $products = \DB::table('products')->select(['id', 'name', 'price', 'stock'])->get();
-        $view = \View::make('admin.reports.products', compact('products'))->render();
-        $pdf = \App::make('dompdf.wrapper');
-        $pdf->loadHTML($view);
-        return $pdf->stream('products' . '.pdf');
+        try {
+            $product->delete();
+        } catch (Exception $e) {
+            $message = $e->getMessage();
+            //dd($message);
+            exit;
+        }
+        return response()->json([
+            'status' => true,
+            'message' => "Product Deleted successfully!",
+        ], 200);
     }
 }
